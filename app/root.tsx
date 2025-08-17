@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -40,10 +41,62 @@ export function Layout({ children }: { children: React.ReactNode }) {
     </html>
   );
 }
+import { useState } from "react";
+
 
 export default function App() {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    async function clearAll() {
+      if (import.meta.env.DEV && !sessionStorage.getItem("storageCleared")) {
+        // Clear localStorage
+        localStorage.clear();
+
+        // Clear sessionStorage (but keep our flag)
+        sessionStorage.clear();
+        sessionStorage.setItem("storageCleared", "true");
+
+        // Clear IndexedDB
+        if ("indexedDB" in window) {
+          const dbs = await indexedDB.databases();
+          dbs.forEach((db) => {
+            if (db.name) {
+              indexedDB.deleteDatabase(db.name);
+            }
+          });
+        }
+
+        // Clear Cache Storage
+        if ("caches" in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map((name) => caches.delete(name)));
+        }
+
+        // Unregister service workers
+        if ("serviceWorker" in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          registrations.forEach((reg) => reg.unregister());
+        }
+
+        console.log("✅ Storage cleared once at app start in dev mode");
+      }
+
+      setIsReady(true);
+    }
+
+    clearAll();
+  }, []);
+
+  if (!isReady) {
+    return <div style={{ padding: "2rem" }}>Starting app...</div>;
+  }
+
   return <Outlet />;
 }
+
+
+
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let message = "Oops!";
