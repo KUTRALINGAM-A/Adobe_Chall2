@@ -43,35 +43,7 @@ type FilterType = 'all' | 'new' | 'read';
 type UploadMode = 'read' | 'new' | null;
 
 // Adobe DC View type declaration
-declare global {
-  interface Window {
-    AdobeDC?: {
-      View: new (config: {
-        clientId: string;
-        divId: string;
-      }) => {
-        previewFile: (
-          fileConfig: {
-            content: { location: { url: string } };
-            metaData: { fileName: string };
-          },
-          viewerConfig: {
-            embedMode: string;
-            showAnnotationTools: boolean;
-            showLeftHandPanel: boolean;
-            showDownloadPDF: boolean;
-            showPrintPDF: boolean;
-            showZoomControl: boolean;
-            enableSearchAPIs: boolean;
-            includePDFAnnotations: boolean;
-            defaultViewMode: string;
-          }
-        ) => void;
-      };
-    };
-    pdfjsLib?: any;
-  }
-}
+
 
 const AdobeDocumentManager: React.FC = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -118,7 +90,7 @@ const AdobeDocumentManager: React.FC = () => {
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
     script.async = true;
     script.onload = () => {
-      if (window.pdfjsLib) {
+     if (window.pdfjsLib?.GlobalWorkerOptions) {
         // Set worker source
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       }
@@ -184,7 +156,9 @@ useEffect(() => {
       reader.onload = async (e) => {
         try {
           const arrayBuffer = e.target?.result as ArrayBuffer;
-          const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          const uint8Array = new Uint8Array(arrayBuffer);
+const pdf = await window.pdfjsLib!.getDocument({ data: uint8Array }).promise;
+
           
           let fullText = '';
           const totalPages = pdf.numPages;

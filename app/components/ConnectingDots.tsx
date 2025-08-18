@@ -12,35 +12,7 @@ const GEMINI_API_KEY = 'AIzaSyA4vvBvLJqeWe6SiVBf0Od79JmbBHHdFBU';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
 
 // Adobe DC View type declaration
-declare global {
-  interface Window {
-    jsPDF?: any;
-    AdobeDC?: {
-      View: new (config: {
-        clientId: string;
-        divId: string;
-      }) => {
-        previewFile: (
-          fileConfig: {
-            content: { location: { url: string } };
-            metaData: { fileName: string };
-          },
-          viewerConfig: {
-            embedMode: string;
-            showAnnotationTools: boolean;
-            showLeftHandPanel: boolean;
-            showDownloadPDF: boolean;
-            showPrintPDF: boolean;
-            showZoomControl: boolean;
-            enableSearchAPIs: boolean;
-            includePDFAnnotations: boolean;
-            defaultViewMode: string;
-          }
-        ) => void;
-      };
-    };
-  }
-}
+
 
 let adobePreviewPromise: any = null;
 // API Configuration
@@ -262,7 +234,7 @@ useEffect(() => {
   script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
   script.async = true;
   script.onload = () => {
-    if (window.pdfjsLib) {
+    if (window.pdfjsLib?.GlobalWorkerOptions) {
       window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     }
   };
@@ -683,7 +655,9 @@ const extractTextFromPDF = async (file: File): Promise<string> => {
     }
 
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const uint8Array = new Uint8Array(arrayBuffer);
+const pdf = await window.pdfjsLib!.getDocument({ data: uint8Array }).promise;
+
     let fullText = '';
 
     console.log(`Extracting text from ${file.name} - ${pdf.numPages} pages`);

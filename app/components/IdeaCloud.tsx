@@ -167,7 +167,7 @@ const [pdfTextExtracted, setPdfTextExtracted] = useState('');
       script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
       script.async = true;
       script.onload = () => {
-        if (window.pdfjsLib) {
+       if (window.pdfjsLib?.GlobalWorkerOptions) {
           // Set worker source
           window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }

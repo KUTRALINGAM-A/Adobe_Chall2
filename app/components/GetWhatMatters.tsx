@@ -1,3 +1,25 @@
+declare global {
+  interface Window {
+    AdobeDC?: {
+      View: new (config: { clientId: string; divId: string }) => any;
+      Enum?: {
+        CallbackType?: {
+          PREVIEW_SELECTION_END?: string;
+          EVENT_LISTENER?: string;
+          TEXT_SELECTION_END?: string;
+        };
+      };
+    };
+    pdfjsLib?: {
+      getDocument: (src: any) => any;
+      GlobalWorkerOptions?: {
+        workerSrc: string;
+      };
+    };
+    
+  }
+}
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Upload, FileText, Grid, List, Search, Plus, Eye, Download, ChevronLeft, ChevronRight, 
@@ -13,36 +35,8 @@ import {
 const GEMINI_API_KEY = 'AIzaSyA4vvBvLJqeWe6SiVBf0Od79JmbBHHdFBU';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
 
-// Adobe DC View type declaration
-declare global {
-  interface Window {
-    AdobeDC?: {
-      View: new (config: {
-        clientId: string;
-        divId: string;
-      }) => {
-        previewFile: (
-          fileConfig: {
-            content: { location: { url: string } };
-            metaData: { fileName: string };
-          },
-          viewerConfig: {
-            embedMode: string;
-            showAnnotationTools: boolean;
-            showLeftHandPanel: boolean;
-            showDownloadPDF: boolean;
-            showPrintPDF: boolean;
-            showZoomControl: boolean;
-            enableSearchAPIs: boolean;
-            includePDFAnnotations: boolean;
-            defaultViewMode: string;
-          }
-        ) => void;
-      };
-    };
-    pdfjsLib?: any;
-  }
-}
+
+
 
 let adobePreviewPromise: any = null;
 
@@ -118,7 +112,7 @@ const ConnectingTheDots: React.FC = () => {
   const [isResizingLibrary, setIsResizingLibrary] = useState<boolean>(false);
   const [isResizingSearch, setIsResizingSearch] = useState<boolean>(false);
   const [showSearchPanel, setShowSearchPanel] = useState<boolean>(true);
-  
+  const [selectedPdfText, setSelectedPdfText] = useState<string>('');
   // PDF viewer state
   const [viewingPdf, setViewingPdf] = useState<Document | null>(null);
   const [isLoadingPdf, setIsLoadingPdf] = useState<boolean>(false);
@@ -160,7 +154,7 @@ const ConnectingTheDots: React.FC = () => {
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
     script.async = true;
     script.onload = () => {
-      if (window.pdfjsLib) {
+      if (window.pdfjsLib?.GlobalWorkerOptions) {
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       }
     };
@@ -317,7 +311,9 @@ const ConnectingTheDots: React.FC = () => {
       }
 
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const uint8Array = new Uint8Array(arrayBuffer);
+const pdf = await window.pdfjsLib!.getDocument({ data: uint8Array }).promise;
+
       let fullText = '';
 
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -635,85 +631,346 @@ Please respond with ONLY a valid JSON object in this format:
   };
 
   // Open PDF viewer
-  const openPdfViewer = async (document: Document): Promise<void> => {
-    setIsLoadingPdf(true);
-    setDocuments(prev => prev.map(doc => 
-      doc.id === document.id ? { ...doc, status: 'read' } : doc
-    ));
-    setViewingPdf(document);
+const openPdfViewer = async (document: Document): Promise<void> => {
+  setIsLoadingPdf(true);
+  setDocuments(prev => prev.map(doc => 
+    doc.id === document.id ? { ...doc, status: 'read' } : doc
+  ));
+  setViewingPdf(document);
 
-    if (!showDocumentLibrary) {
-      setShowDocumentLibrary(true);
+  if (!showDocumentLibrary) {
+    setShowDocumentLibrary(true);
+  }
+
+  const viewerContainer = window.document.getElementById('adobe-dc-view');
+  if (viewerContainer) {
+    viewerContainer.innerHTML = '';
+  }
+
+  setTimeout(() => {
+    if (!window.AdobeDC) {
+      console.error("Adobe SDK not available");
+      alert("Adobe PDF SDK not loaded. Please refresh the page.");
+      return;
     }
 
-    const viewerContainer = window.document.getElementById('adobe-dc-view');
-    if (viewerContainer) {
-      viewerContainer.innerHTML = '';
-    }
+    try {
+      const adobeDCView = new window.AdobeDC.View({
+        clientId: "82a5500aa5d945049893aec8a2514446",
+        divId: "adobe-dc-view",
+      });
 
-    setTimeout(() => {
-      if (window.AdobeDC) {
-        try {
-          const adobeDCView = new window.AdobeDC.View({
-            clientId: "82a5500aa5d945049893aec8a2514446",
-            divId: "adobe-dc-view"
-          });
+      let pdfUrl = document.url;
 
-          let pdfUrl = document.url;
-
-          if (!pdfUrl || pdfUrl.trim() === '') {
-            if (document.file && document.file instanceof File) {
-              pdfUrl = URL.createObjectURL(document.file);
-            } else if (document.fileData) {
-              try {
-                let arrayBuffer: ArrayBuffer;
-                if (Array.isArray(document.fileData)) {
-                  arrayBuffer = new Uint8Array(document.fileData).buffer;
-                } else {
-                  arrayBuffer = document.fileData as ArrayBuffer;
-                }
-                
-                const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-                pdfUrl = URL.createObjectURL(blob);
-              } catch (error) {
-                console.error('Failed to create blob URL from fileData:', error);
-                throw new Error('Could not create PDF URL from file data');
-              }
+      if (!pdfUrl || pdfUrl.trim() === "") {
+        if (document.file && document.file instanceof File) {
+          pdfUrl = URL.createObjectURL(document.file);
+        } else if (document.fileData) {
+          try {
+            let arrayBuffer: ArrayBuffer;
+            if (Array.isArray(document.fileData)) {
+              arrayBuffer = new Uint8Array(document.fileData).buffer;
             } else {
-              throw new Error('No file data available for PDF viewing');
+              arrayBuffer = document.fileData as ArrayBuffer;
+            }
+
+            const blob = new Blob([arrayBuffer], { type: "application/pdf" });
+            pdfUrl = URL.createObjectURL(blob);
+          } catch (error) {
+            console.error("Failed to create blob URL from fileData:", error);
+            throw new Error("Could not create PDF URL from file data");
+          }
+        } else {
+          throw new Error("No file data available for PDF viewing");
+        }
+      }
+
+      const previewFilePromise = adobeDCView.previewFile(
+        {
+          content: { location: { url: pdfUrl } },
+          metaData: { fileName: document.name },
+        },
+        {
+          embedMode: "SIZED_CONTAINER",
+          showAnnotationTools: true,
+          showLeftHandPanel: false,
+          showDownloadPDF: true,
+          showPrintPDF: true,
+          showZoomControl: true,
+          enableSearchAPIs: true,
+          includePDFAnnotations: true,
+          defaultViewMode: "FIT_WIDTH",
+        }
+      );
+
+      // Enhanced callback setup with multiple fallback methods
+      previewFilePromise.then(async (viewer: any) => {
+        try {
+          console.log("PDF viewer loaded, setting up selection callbacks...");
+          
+          // Store the viewer reference globally for debugging
+          (window as any).__adobeViewer = viewer;
+
+          // Method 1: Try with proper enum constants
+          if (window.AdobeDC?.Enum?.CallbackType?.PREVIEW_SELECTION_END) {
+            console.log("Setting up callback with PREVIEW_SELECTION_END enum...");
+            adobeDCView.registerCallback(
+              window.AdobeDC.Enum.CallbackType.PREVIEW_SELECTION_END,
+              async function(event?: any) {
+                console.log("Selection callback triggered (enum method):", event);
+                await handleSelectionCallback(viewer);
+              },
+              { enableFilePreviewEvents: true }
+            );
+          }
+
+          // Method 2: Try with string constants (more reliable)
+          const callbackTypes = [
+            'PREVIEW_SELECTION_END',
+            'TEXT_SELECTION_END', 
+            'SELECTION_END'
+          ];
+
+          for (const callbackType of callbackTypes) {
+            try {
+              console.log(`Registering callback for: ${callbackType}`);
+              adobeDCView.registerCallback(
+                callbackType,
+                async function(event?: any) {
+                  console.log(`Selection callback triggered (${callbackType}):`, event);
+                  await handleSelectionCallback(viewer);
+                },
+                { enableFilePreviewEvents: true }
+              );
+            } catch (error) {
+              console.warn(`Failed to register ${callbackType} callback:`, error);
             }
           }
 
-          adobePreviewPromise = adobeDCView.previewFile(
-            {
-              content: { location: { url: pdfUrl } },
-              metaData: { fileName: document.name }
-            },
-            {
-              embedMode: "SIZED_CONTAINER",
-              showAnnotationTools: true,
-              showLeftHandPanel: false,
-              showDownloadPDF: true,
-              showPrintPDF: true,
-              showZoomControl: true,
-              enableSearchAPIs: true,
-              includePDFAnnotations: true,
-              defaultViewMode: "FIT_WIDTH"
-            }
-          );
+          // Method 3: Event listener approach
+          if (window.AdobeDC?.Enum?.CallbackType?.EVENT_LISTENER) {
+            console.log("Setting up event listener callback...");
+            adobeDCView.registerCallback(
+              window.AdobeDC.Enum.CallbackType.EVENT_LISTENER,
+              async function(event: any) {
+                console.log("Event listener triggered:", event);
+                if (event && (
+                  event.type === 'PREVIEW_SELECTION_END' || 
+                  event.type === 'TEXT_SELECTION_END' ||
+                  event.type === 'SELECTION_END'
+                )) {
+                  console.log(`Handling selection event: ${event.type}`);
+                  await handleSelectionCallback(viewer);
+                }
+              },
+              { enableFilePreviewEvents: true }
+            );
+          }
+
+          // Method 4: Direct polling as backup (most reliable fallback)
+          let isPolling = false;
+          const startPolling = () => {
+            if (isPolling) return;
+            isPolling = true;
+            
+            console.log("Starting selection polling as fallback...");
+            const pollForSelection = async () => {
+              try {
+                const apis = await viewer.getAPIs();
+                const result = await apis.getSelectedContent();
+                
+                if (result && result.data && result.data.length > 0) {
+                  const selectedText = result.data[0].Text?.trim();
+                  if (selectedText && selectedText.length > 5) { // Minimum text length
+                    console.log("Polling detected selection:", selectedText);
+                    isPolling = false; // Stop polling temporarily
+                    showSelectionNotification(selectedText);
+                    await triggerSearchWithSelectedText(selectedText);
+                    
+                    // Resume polling after a delay
+                    setTimeout(() => { isPolling = false; }, 2000);
+                    return;
+                  }
+                }
+                
+                if (isPolling) {
+                  setTimeout(pollForSelection, 1000); // Poll every second
+                }
+              } catch (error) {
+                // Silent error - polling will continue
+                if (isPolling) {
+                  setTimeout(pollForSelection, 1000);
+                }
+              }
+            };
+            
+            setTimeout(pollForSelection, 2000); // Start after PDF loads
+          };
+
+          // Start polling after a delay to let PDF fully load
+          setTimeout(startPolling, 3000);
+
+          // Method 5: Manual trigger button as ultimate fallback
+          setTimeout(() => {
+            addManualSelectionButton(viewer);
+          }, 2000);
 
         } catch (error) {
-          console.error('Error creating Adobe viewer:', error);
-          alert('Error loading PDF viewer: ' + (error instanceof Error ? error.message : 'Unknown error'));
+          console.error("Error setting up PDF selection callbacks:", error);
         }
-      } else {
-        console.error('Adobe SDK not available');
-        alert('Adobe PDF SDK not loaded. Please refresh the page.');
-      }
-      
+      }).catch(() => {
+        console.error("Error loading PDF preview:");
+      });
+
       setIsLoadingPdf(false);
-    }, 500);
+    } catch (error) {
+      console.error("Error creating Adobe viewer:", error);
+      alert("Error loading PDF viewer: " + (error instanceof Error ? error.message : "Unknown error"));
+      setIsLoadingPdf(false);
+    }
+  }, 500);
+};
+
+const addManualSelectionButton = (viewer: any) => {
+  const viewerContainer = document.getElementById('adobe-dc-view');
+  if (!viewerContainer) return;
+
+  // Remove existing button if any
+  const existingButton = document.getElementById('manual-selection-btn');
+  if (existingButton) existingButton.remove();
+
+  const button = document.createElement('button');
+  button.id = 'manual-selection-btn';
+  button.innerHTML = `
+    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    Get Selected Text
+  `;
+  button.className = `
+    fixed top-20 left-1/2 transform -translate-x-1/2 z-50
+    bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg
+    flex items-center text-sm font-medium transition-all duration-200
+    hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500
+  `;
+  
+  button.onclick = async () => {
+    try {
+      console.log("Manual selection button clicked");
+      await handleSelectionCallback(viewer);
+    } catch (error) {
+      console.error("Manual selection failed:", error);
+      alert("Unable to get selected text. Try selecting text again.");
+    }
   };
+
+  document.body.appendChild(button);
+
+  // Auto-hide button after 10 seconds
+  setTimeout(() => {
+    if (button && document.body.contains(button)) {
+      button.style.opacity = '0.7';
+      button.style.transform = 'translate(-50%, -50%) scale(0.9)';
+    }
+  }, 10000);
+};
+
+// Enhanced selection notification
+
+
+const showSelectionNotification = (selectedText: string) => {
+  // Remove any existing notifications
+  const existingNotifications = document.querySelectorAll('.selection-notification');
+  existingNotifications.forEach(n => n.remove());
+
+  const notification = document.createElement('div');
+  notification.className = 'selection-notification fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white p-4 rounded-lg shadow-xl z-50 max-w-md animate-fade-in';
+  notification.innerHTML = `
+    <div class="flex items-start space-x-3">
+      <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <h4 class="font-semibold">Text Selected & Searching!</h4>
+        <p class="text-sm text-green-100 mt-1">
+          "${selectedText.substring(0, 60)}${selectedText.length > 60 ? '...' : ''}"
+        </p>
+        <p class="text-xs text-green-200 mt-2">
+          🔍 Finding relevant sections across all documents...
+        </p>
+      </div>
+      <button onclick="this.parentElement.parentElement.remove()" class="text-green-200 hover:text-white">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(notification);
+
+  // Remove notification after 5 seconds
+  setTimeout(() => {
+    if (document.body.contains(notification)) {
+      notification.style.opacity = '0';
+      notification.style.transform = 'translate(-50%, -10px) scale(0.95)';
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
+      }, 300);
+    }
+  }, 5000);
+};
+
+const handleSelectionCallback = async (viewer: any) => {
+  try {
+    console.log("Processing text selection...");
+    const apis = await viewer.getAPIs();
+    const selectedContent = await apis.getSelectedContent();
+    
+    console.log("Selected content result:", selectedContent);
+    
+    let selectedText = '';
+    
+    // Try different ways to extract the selected text based on API response format
+    if (selectedContent) {
+      // Method 1: Direct data property (what we're seeing in console)
+      if (typeof selectedContent.data === 'string') {
+        selectedText = selectedContent.data.trim();
+        console.log("Extracted text (method 1):", selectedText);
+      }
+      // Method 2: Array format with Text property
+      else if (selectedContent.data && Array.isArray(selectedContent.data) && selectedContent.data.length > 0) {
+        if (selectedContent.data[0].Text) {
+          selectedText = selectedContent.data[0].Text.trim();
+          console.log("Extracted text (method 2):", selectedText);
+        } else if (typeof selectedContent.data[0] === 'string') {
+          selectedText = selectedContent.data[0].trim();
+          console.log("Extracted text (method 3):", selectedText);
+        }
+      }
+      // Method 3: Check if selectedContent itself has text
+      else if (selectedContent.text) {
+        selectedText = selectedContent.text.trim();
+        console.log("Extracted text (method 4):", selectedText);
+      }
+    }
+    
+    console.log("Final extracted text:", selectedText);
+    
+    if (selectedText && selectedText.length > 3) { // Minimum meaningful text
+      showSelectionNotification(selectedText);
+      await triggerSearchWithSelectedText(selectedText);
+    } else {
+      console.log("Selected text too short or empty, length:", selectedText?.length);
+    }
+  } catch (error) {
+    console.error("Error processing selection:", error);
+  }
+};
 
   // Close PDF viewer
   const closePdfViewer = (): void => {
@@ -723,6 +980,89 @@ Please respond with ONLY a valid JSON object in this format:
       viewerContainer.innerHTML = '';
     }
   };
+
+ const triggerSearchWithSelectedText = async (selectedText: string) => {
+  if (!selectedText || selectedText.trim().length === 0) {
+    console.log('No text selected');
+    return;
+  }
+
+  // Clean up the selected text
+  const cleanedText = selectedText.trim();
+  
+  // Validate text length
+  if (cleanedText.length < 3) {
+    console.log('Selected text too short for meaningful search');
+    return;
+  }
+
+  console.log('Triggering search with selected text:', cleanedText);
+  
+  // Set the search text
+  setSearchText(cleanedText);
+  setSelectedPdfText(cleanedText);
+  
+  // Show search panel if hidden
+  if (!showSearchPanel) {
+    setShowSearchPanel(true);
+  }
+
+  // Auto-trigger the search
+  if (documents.filter(d => d.file).length > 0) {
+    setIsSearching(true);
+    
+    try {
+      const validDocuments = documents.filter(doc => doc.file);
+      
+      // Extract text from all PDFs
+      const documentContents = await Promise.all(
+        validDocuments.map(async (doc) => {
+          const text = await extractTextFromPDF(doc.file!);
+          return {
+            name: doc.name,
+            content: text,
+            size: text.length
+          };
+        })
+      );
+
+      // Use Gemini to find relevant sections
+      const relevantSections = await findRelevantSections(documentContents, cleanedText);
+      setRelevantSections(relevantSections);
+      
+      // Show success notification
+      if (relevantSections.length > 0) {
+        setTimeout(() => {
+          const successNotification = document.createElement('div');
+          successNotification.className = 'fixed bottom-4 right-4 bg-blue-600 text-white p-3 rounded-lg shadow-lg z-50 animate-fade-in';
+          successNotification.innerHTML = `
+            <div class="flex items-center space-x-2">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span class="text-sm">Found ${relevantSections.length} relevant sections!</span>
+            </div>
+          `;
+          document.body.appendChild(successNotification);
+          
+          setTimeout(() => {
+            if (document.body.contains(successNotification)) {
+              document.body.removeChild(successNotification);
+            }
+          }, 3000);
+        }, 1000);
+      }
+      
+    } catch (error) {
+      console.error('Error searching content:', error);
+      alert('Error searching content: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setIsSearching(false);
+    }
+  }
+};
+
+
 
   // Show navigation alert
   const showNavigationAlert = (section: RelevantSection) => {
@@ -1567,13 +1907,39 @@ Please respond with ONLY a valid JSON object in this format:
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Search Text
                     </label>
-                    <textarea
-                      placeholder="Paste or type your search query here... (e.g., 'project management best practices', 'software development lifecycle', etc.)"
-                      value={searchText}
-                      onChange={(e) => setSearchText(e.target.value)}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm resize-none"
-                    />
+                   <div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    Search Text
+    {selectedPdfText && (
+      <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+        From PDF Selection
+      </span>
+    )}
+  </label>
+  <textarea
+    placeholder="Paste or type your search query here... (e.g., 'project management best practices', 'software development lifecycle', etc.)"
+    value={searchText}
+    onChange={(e) => {
+      setSearchText(e.target.value);
+      // Clear the PDF selection indicator if user manually changes text
+      if (e.target.value !== selectedPdfText) {
+        setSelectedPdfText('');
+      }
+    }}
+    rows={4}
+    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm resize-none transition-all duration-200 ${
+      selectedPdfText ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
+    }`}
+  />
+  {selectedPdfText && (
+    <p className="text-xs text-blue-600 mt-1 flex items-center">
+      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      Text automatically populated from PDF selection
+    </p>
+  )}
+</div>
                   </div>
                   <button
                     onClick={searchRelevantContent}
