@@ -1734,9 +1734,7 @@ const openPdfViewer = async (document: Document): Promise<void> => {
   setIsLoadingPdf(true);
   
   // Mark document as read
-  setDocuments(prev => prev.map(doc => 
-    doc.id === document.id ? { ...doc, status: 'read' } : doc
-  ));
+  
   
   // Set viewing PDF
   setViewingPdf(document);
@@ -1747,18 +1745,6 @@ const openPdfViewer = async (document: Document): Promise<void> => {
   }
   
   // Update localStorage with read status - preserve original URL format
-  try {
-    const updatedDocs = documents.map(doc => ({
-      ...doc,
-      status: doc.id === document.id ? 'read' : doc.status,
-      url: doc.url && doc.url.startsWith('data:') ? doc.url : doc.url,
-      fileData: doc.fileData ? Array.from(new Uint8Array(doc.fileData as ArrayBuffer)) : undefined,
-      file: null
-    }));
-    localStorage.setItem('uploadedDocuments', JSON.stringify(updatedDocs));
-  } catch (error) {
-    console.warn('Failed to update document status in localStorage:', error);
-  }
   
   // Clear previous Adobe DC View instance
   const viewerContainer = window.document.getElementById('adobe-dc-view');

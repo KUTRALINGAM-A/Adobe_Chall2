@@ -633,9 +633,7 @@ Please respond with ONLY a valid JSON object in this format:
   // Open PDF viewer
 const openPdfViewer = async (document: Document): Promise<void> => {
   setIsLoadingPdf(true);
-  setDocuments(prev => prev.map(doc => 
-    doc.id === document.id ? { ...doc, status: 'read' } : doc
-  ));
+  
   setViewingPdf(document);
 
   if (!showDocumentLibrary) {
