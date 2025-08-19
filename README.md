@@ -71,19 +71,19 @@ Update API keys/endpoints at the following lines:
 
 - **AdobeDocumentManager.tsx** → Line **79**
 
-![WhatsApp Image 2025-08-19 at 18.29.31.jpeg](attachment:80f1047d-fe70-4866-be94-43bd4897f65d:WhatsApp_Image_2025-08-19_at_18.29.31.jpeg)
+![alt text](https://github.com/KUTRALINGAM-A]/Adobe_Chall2/blob/main/AdobeDocumentManager_img.jpg?raw=true)
 
 - **IdeaCloud.tsx** → Lines **10–11**
 
-![WhatsApp Image 2025-08-19 at 18.29.32.jpeg](attachment:1c8c42c2-35ca-47e1-80a9-4826989befe4:WhatsApp_Image_2025-08-19_at_18.29.32.jpeg)
+![alt text](https://github.com/KUTRALINGAM-A]/Adobe_Chall2/blob/main/IdeaCloud_img.jpg?raw=true)
 
 - **ConnectingDots.tsx** → Lines **11–12**
 
-![WhatsApp Image 2025-08-19 at 18.30.40.jpeg](attachment:136733dd-c3fd-4f1a-805f-6c013aa71401:WhatsApp_Image_2025-08-19_at_18.30.40.jpeg)
+![alt text](https://github.com/KUTRALINGAM-A]/Adobe_Chall2/blob/main/ConnectingDots_img.jpg?raw=true)
 
 - **GetWhatMatters.tsx** → Lines **35–36**
 
-![WhatsApp Image 2025-08-19 at 18.31.51.jpeg](attachment:d1a3d66c-b03b-4bbf-9210-8768188345cf:WhatsApp_Image_2025-08-19_at_18.31.51.jpeg)
+![alt text](https://github.com/KUTRALINGAM-A]/Adobe_Chall2/blob/main/GetWhatMatters_img.jpg?raw=true)
 
 (Reference images)
 
