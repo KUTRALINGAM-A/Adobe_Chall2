@@ -149,23 +149,24 @@ const ConnectingTheDots: React.FC = () => {
   }, []);
 
   // PDF.js initialization
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    script.async = true;
-    script.onload = () => {
-      if (window.pdfjsLib?.GlobalWorkerOptions) {
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      }
-    };
-    document.head.appendChild(script);
+ useEffect(() => {
+  const script = document.createElement('script');
+  script.src = 'pdfjs-5.4.54-dist/build/pdf.mjs'; // Use forward slashes
+  script.type = 'module'; // Add this for .mjs files
+  script.async = true;
+  script.onload = () => {
+    if (window.pdfjsLib?.GlobalWorkerOptions) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs-5.4.54-dist/build/pdf.worker.mjs';
+    }
+  };
+  document.head.appendChild(script);
 
-    return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
-    };
-  }, []);
+  return () => {
+    if (document.head.contains(script)) {
+      document.head.removeChild(script);
+    }
+  };
+}, []);
 
   // Load documents from localStorage on component mount
   useEffect(() => {
