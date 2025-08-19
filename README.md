@@ -7,11 +7,15 @@ The website includes **four main modules** – `Documents`, `IdeaCloud`, `GetWha
 ---
 
 ## 🤖 Powered by Gemini API
-
 This project uses **Google Gemini API** for:
-
 - **LLM (Large Language Model):** Summarization, Q&A with PDFs, idea generation, extracting relevant info.
 - **TTS (Text-to-Speech):** Audio overview of documents and insights.
+
+It also integrates the **Adobe Embed API** for PDF handling and rendering.
+
+⚠️ **Note:**  
+At this stage, the **Adobe Embed API key** and **Gemini API key** are **hardcoded in the code** for simplicity.  
+We apologize for the inconvenience 🙏. Please update them manually in the specified lines if you wish to use your own keys.  
 
 ---
 
@@ -66,26 +70,14 @@ This project uses **Google Gemini API** for:
 ---
 
 ## ⚙️ API Configuration
+Update keys/endpoints in these files if needed:
 
-Update API keys/endpoints at the following lines:
-
-- **AdobeDocumentManager.tsx** → Line **79**
-
-![alt text](https://github.com/KUTRALINGAM-A]/Adobe_Chall2/blob/main/AdobeDocumentManager_img.jpg?raw=true)
-
-- **IdeaCloud.tsx** → Lines **10–11**
-
-![alt text](https://github.com/KUTRALINGAM-A]/Adobe_Chall2/blob/main/IdeaCloud_img.jpg?raw=true)
-
-- **ConnectingDots.tsx** → Lines **11–12**
-
-![alt text](https://github.com/KUTRALINGAM-A]/Adobe_Chall2/blob/main/ConnectingDots_img.jpg?raw=true)
-
+- **AdobeDocumentManager.tsx** → Line **79**  
+- **IdeaCloud.tsx** → Lines **10–11**  
+- **ConnectingDots.tsx** → Lines **11–12**  
 - **GetWhatMatters.tsx** → Lines **35–36**
 
-![alt text](https://github.com/KUTRALINGAM-A]/Adobe_Chall2/blob/main/GetWhatMatters_img.jpg?raw=true)
-
-(Reference images)
+(Reference images for these lines are provided in the repo/docs.)
 
 ---
 
@@ -121,6 +113,9 @@ docker run -p 3000:3000 my_app
 Your app will now be available at:
 
 👉 `http://localhost:3000`
+
+⚠️ Important:
+The challenge required deployment on port 80, but this project is currently running on port 3000 by default.
 
 ---
 
