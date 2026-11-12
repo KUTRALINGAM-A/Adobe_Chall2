@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router';
+import { getAdobeClientId } from '~/utils/adobeConfig';
 import { 
   Upload, FileText, Grid, List, Search, Plus, Eye, Download, ChevronLeft, ChevronRight, 
   BookOpen, BookOpenCheck, GripVertical, MessageCircle, Send, Bot, User, X, Minimize2, Maximize2,
@@ -1825,7 +1826,7 @@ const openPdfViewer = async (document: Document): Promise<void> => {
     if (window.AdobeDC) {
       try {
         const adobeDCView = new window.AdobeDC.View({
-          clientId: "82a5500aa5d945049893aec8a2514446",
+          clientId: getAdobeClientId(),
           divId: "adobe-dc-view"
         });
 

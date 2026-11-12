@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router';
-import { Upload, FileText, Grid, List, Search, Plus, Eye, Download, ChevronLeft, ChevronRight, BookOpen, BookOpenCheck, GripVertical, MessageCircle, Send, Bot, User, X, Minimize2, Maximize2, Trash2 } from 'lucide-react';
+import { Upload, FileText, Grid, List, Search, Plus, Eye, Download, ChevronLeft, ChevronRight, BookOpen, BookOpenCheck, GripVertical, MessageCircle, Send, Bot, User, X, Minimize2, Maximize2, Trash2, Key } from 'lucide-react';
+import { getAdobeClientId } from '~/utils/adobeConfig';
+import { AdobeKeyModal } from '~/components/AdobeKeyModal';
 
 interface GeminiConfig {
   apiKey: string;
@@ -64,6 +66,8 @@ const AdobeDocumentManager: React.FC = () => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [currentMessage, setCurrentMessage] = useState<string>('');
   const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [showKeyModal, setShowKeyModal] = useState<boolean>(false);
+  const [viewerType, setViewerType] = useState<'adobe' | 'browser'>('adobe');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -479,7 +483,7 @@ const openPdfViewer = async (document: Document): Promise<void> => {
   setTimeout(() => {
     if (window.AdobeDC) {
       const adobeDCView = new window.AdobeDC.View({
-        clientId: "82a5500aa5d945049893aec8a2514446",
+        clientId: getAdobeClientId(),
         divId: "adobe-dc-view"
       });
 
@@ -672,7 +676,15 @@ What would you like to know?`,
                 <Link to="/getwhatmatters" className="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium">ConnectingDots</Link>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setShowKeyModal(true)}
+                className="px-2.5 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center space-x-1 border border-gray-300 transition-all hover:scale-105"
+                title="Configure Adobe API Key"
+              >
+                <Key className="h-3.5 w-3.5 text-red-600" />
+                <span>Adobe Key</span>
+              </button>
               <span className="text-sm text-gray-700">Flamingoes</span>
               {/* Chat button */}
               <button
@@ -965,13 +977,58 @@ What would you like to know?`,
                   </div>
                 </div>
                 <div className="flex space-x-2">
+                  <button
+                    onClick={() => {
+                      const next = viewerType === 'adobe' ? 'browser' : 'adobe';
+                      setViewerType(next);
+                      if (next === 'adobe' && selectedPdf) {
+                        openPdfViewer(selectedPdf);
+                      }
+                    }}
+                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-xs leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none transition-all duration-200 hover:scale-105"
+                    title="Toggle viewer"
+                  >
+                    {viewerType === 'adobe' ? '📄 Use Browser Viewer' : '🔴 Use Adobe Viewer'}
+                  </button>
                   <button className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 hover:scale-105">
                     <Download className="h-4 w-4 mr-2" />
                     Download
                   </button>
                 </div>
               </div>
-              <div id="adobe-dc-view" className="flex-1 overflow-hidden"></div>
+              {viewerType === 'adobe' && (
+                <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-xs flex items-center justify-between text-amber-900">
+                  <span>
+                    Seeing <strong>&quot;domain not authorized&quot;</strong>? Adobe requires a free Client ID for <code>kutralingam-a.github.io</code>.
+                  </span>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setShowKeyModal(true)}
+                      className="underline font-bold text-red-600 hover:text-red-700"
+                    >
+                      Set Adobe Key
+                    </button>
+                    <span>or</span>
+                    <button
+                      onClick={() => setViewerType('browser')}
+                      className="underline font-bold text-blue-600 hover:text-blue-700"
+                    >
+                      Switch to Browser Viewer
+                    </button>
+                  </div>
+                </div>
+              )}
+              {viewerType === 'adobe' ? (
+                <div id="adobe-dc-view" className="flex-1 overflow-hidden"></div>
+              ) : (
+                <div className="flex-1 overflow-hidden bg-gray-100">
+                  <iframe
+                    src={selectedPdf.url}
+                    title={selectedPdf.name}
+                    className="w-full h-full border-0"
+                  />
+                </div>
+              )}
             </div>
           ) : (
             <div className="h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-red-50">
@@ -1164,6 +1221,14 @@ What would you like to know?`,
           }
         `
       }} />
+
+      <AdobeKeyModal
+        isOpen={showKeyModal}
+        onClose={() => setShowKeyModal(false)}
+        onKeySaved={() => {
+          if (selectedPdf) openPdfViewer(selectedPdf);
+        }}
+      />
     </div>
   );
 };
