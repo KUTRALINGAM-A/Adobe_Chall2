@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from 'react-router';
 import { 
   Upload, FileText, Grid, List, Search, Plus, Eye, Download, ChevronLeft, ChevronRight, 
   BookOpen, BookOpenCheck, GripVertical, MessageCircle, Send, Bot, User, X, Minimize2, Maximize2,
@@ -164,12 +165,12 @@ const [pdfTextExtracted, setPdfTextExtracted] = useState('');
 
   useEffect(() => {
    const script = document.createElement('script');
-   script.src = 'pdfjs-5.4.54-dist/build/pdf.mjs'; // Use forward slashes
+   script.src = `${import.meta.env.BASE_URL}pdfjs-5.4.54-dist/build/pdf.mjs`; // Use forward slashes
    script.type = 'module'; // Add this for .mjs files
    script.async = true;
    script.onload = () => {
      if (window.pdfjsLib?.GlobalWorkerOptions) {
-       window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs-5.4.54-dist/build/pdf.worker.mjs';
+       window.pdfjsLib.GlobalWorkerOptions.workerSrc = `${import.meta.env.BASE_URL}pdfjs-5.4.54-dist/build/pdf.worker.mjs`;
      }
    };
    document.head.appendChild(script);
@@ -2115,10 +2116,10 @@ const openPdfViewer = async (document: Document): Promise<void> => {
               
               {/* Navigation Links */}
               <nav className="flex space-x-8">
-                <a href="/" className="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium">Documents</a>
-                <a href="/ideacloud" className="text-gray-900 hover:text-red-600 px-3 py-2 text-sm font-medium border-b-2 border-red-600">IdeaCloud</a>
-                <a href="/connectdots" className="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium">GetWhatMatters</a>
-                <a href="/getwhatmatters" className="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium">ConnectingDots</a>
+                <Link to="/" className="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium">Documents</Link>
+                <Link to="/ideacloud" className="text-gray-900 hover:text-red-600 px-3 py-2 text-sm font-medium border-b-2 border-red-600">IdeaCloud</Link>
+                <Link to="/connectdots" className="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium">GetWhatMatters</Link>
+                <Link to="/getwhatmatters" className="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium">ConnectingDots</Link>
               </nav>
             </div>
             <div className="flex items-center space-x-2">

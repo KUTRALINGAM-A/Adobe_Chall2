@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
+    "postbuild": "node -e \"const fs=require('fs'); fs.copyFileSync('build/client/index.html','build/client/404.html');\"",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"

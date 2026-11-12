@@ -1,4 +1,4 @@
-import AdobeDocumentManager from '~/components/AdobeDocumentManager.js';
+import AdobeDocumentManager from '~/components/AdobeDocumentManager';
 
 
 export function Documents() {

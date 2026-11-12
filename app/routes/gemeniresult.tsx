@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from 'react-router';
 import { 
   Upload, FileText, Grid, List, Search, Plus, Eye, Download, ChevronLeft, ChevronRight, 
   BookOpen, BookOpenCheck, GripVertical, MessageCircle, Send, Bot, User, X, Minimize2, Maximize2,
@@ -1036,10 +1037,10 @@ const openPdfViewer = async (document) => {
               </div>
               
               <nav className="flex space-x-8">
-                <a href="/" className="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium">Documents</a>
-                <a href="/ideacloud" className="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium">IdeaCloud</a>
-                <a href="/connectdots" className="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium">GetWhatMatters</a>
-                <a href="/getwhatmatters" className="text-gray-900 hover:text-red-600 px-3 py-2 text-sm font-medium border-b-2 border-red-600">ConnectingDots</a>
+                <Link to="/" className="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium">Documents</Link>
+                <Link to="/ideacloud" className="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium">IdeaCloud</Link>
+                <Link to="/connectdots" className="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium">GetWhatMatters</Link>
+                <Link to="/getwhatmatters" className="text-gray-900 hover:text-red-600 px-3 py-2 text-sm font-medium border-b-2 border-red-600">ConnectingDots</Link>
               </nav>
             </div>
             <div className="flex items-center space-x-2">
