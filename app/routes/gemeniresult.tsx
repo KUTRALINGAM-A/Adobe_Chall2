@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router';
 import { getAdobeClientId } from '~/utils/adobeConfig';
+import { getGeminiApiKey, getGeminiApiUrl } from '~/utils/geminiConfig';
 import { 
   Upload, FileText, Grid, List, Search, Plus, Eye, Download, ChevronLeft, ChevronRight, 
   BookOpen, BookOpenCheck, GripVertical, MessageCircle, Send, Bot, User, X, Minimize2, Maximize2,
@@ -11,9 +12,8 @@ import {
   Info, Pause, SkipForward, SkipBack, Headphones, Mic, FileSearch, Bookmark, Quote
 } from 'lucide-react';
 
-// Gemini API configuration
-const GEMINI_API_KEY = 'AIzaSyA4vvBvLJqeWe6SiVBf0Od79JmbBHHdFBU';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+// Dynamic Gemini API configuration
+const getGeminiApiEndpoint = () => `${getGeminiApiUrl()}?key=${getGeminiApiKey()}`;
 
 // Adobe DC View type declaration
 
@@ -495,7 +495,7 @@ Please respond with ONLY a valid JSON array in this format:
 ]`;
 
     try {
-      const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      const response = await fetch(getGeminiApiEndpoint(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -578,7 +578,7 @@ Please respond with ONLY a valid JSON object in this format:
   "confidence": 90
 }`;
 
-      const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      const response = await fetch(getGeminiApiEndpoint(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

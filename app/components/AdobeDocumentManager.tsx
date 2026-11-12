@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router';
 import { Upload, FileText, Grid, List, Search, Plus, Eye, Download, ChevronLeft, ChevronRight, BookOpen, BookOpenCheck, GripVertical, MessageCircle, Send, Bot, User, X, Minimize2, Maximize2, Trash2, Key } from 'lucide-react';
 import { getAdobeClientId } from '~/utils/adobeConfig';
+import { getGeminiApiKey, getGeminiModel } from '~/utils/geminiConfig';
 import { AdobeKeyModal } from '~/components/AdobeKeyModal';
 
 interface GeminiConfig {
@@ -79,10 +80,10 @@ const AdobeDocumentManager: React.FC = () => {
 
 
 
-  // Fixed configuration - REPLACE WITH YOUR API KEY
+  // Dynamic configuration from settings
   const [geminiConfig, setGeminiConfig] = useState<GeminiConfig>({
-    apiKey: 'AIzaSyA4vvBvLJqeWe6SiVBf0Od79JmbBHHdFBU', // Replace with your actual API key
-    model: 'gemini-2.0-flash-exp'
+    apiKey: getGeminiApiKey(),
+    model: getGeminiModel()
   });
   
   const [pdfContent, setPdfContent] = useState<string>('');
@@ -1226,6 +1227,10 @@ What would you like to know?`,
         isOpen={showKeyModal}
         onClose={() => setShowKeyModal(false)}
         onKeySaved={() => {
+          setGeminiConfig({
+            apiKey: getGeminiApiKey(),
+            model: getGeminiModel()
+          });
           if (selectedPdf) openPdfViewer(selectedPdf);
         }}
       />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router';
 import { getAdobeClientId } from '~/utils/adobeConfig';
+import { getGeminiApiKey, getGeminiApiUrl } from '~/utils/geminiConfig';
 import { 
   Upload, FileText, Grid, List, Search, Plus, Eye, Download, ChevronLeft, ChevronRight, 
   BookOpen, BookOpenCheck, GripVertical, MessageCircle, Send, Bot, User, X, Minimize2, Maximize2,
@@ -8,9 +9,8 @@ import {
   ZoomIn, ZoomOut, RotateCcw, MousePointer, Type, Layers, Settings, Sparkles,CheckCircle, AlertTriangle, Zap,CheckCircle2
 } from 'lucide-react';
 
-// Gemini API Configuration
-const GEMINI_API_KEY = 'AIzaSyA4vvBvLJqeWe6SiVBf0Od79JmbBHHdFBU';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+// Dynamic Gemini API Configuration
+const getGeminiApiEndpoint = () => `${getGeminiApiUrl()}?key=${getGeminiApiKey()}`;
 
 
 // Type definitions
@@ -580,7 +580,7 @@ IMPORTANT: Every single suggestion must reference specific content from the prov
 
     console.log('Sending enhanced prompt to Gemini, prompt length:', prompt.length);
 
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(getGeminiApiEndpoint(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -777,7 +777,7 @@ const getBotResponse = async (message: string): Promise<string> => {
       }
     };
 
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(getGeminiApiEndpoint(), {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
